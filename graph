@@ -1,0 +1,153 @@
+#include <stdio.h>
+
+// Structure to represent a graph node
+struct Node
+{
+    int nodeid;     // Node identifier
+    int adjcount;   // Number of adjacent nodes
+    int adjs[10];   // Array to store adjacent node identifiers
+    int costs[10];  // Array to store costs associated with adjacent nodes
+};
+
+// Function to add a node to the graph
+int addNode(struct Node *p, int nid, int count)
+{
+    int i = 0, ncount = count;
+
+    // Check if the node already exists in the graph
+    for (i = 0; i < count; i++)
+    {
+        if (p[i].nodeid == nid)
+        {
+            break;
+        }
+    }
+
+    // If the node is not found, add it to the graph
+    if (i == count)
+    {
+        p[i].nodeid = nid;
+        p[i].adjcount = 0;
+        ncount++;
+    }
+
+    return ncount;
+}
+
+// Function to add an adjacent node with a cost to a given node in the graph
+void addAdjacent(struct Node *p, int nid1, int nid2, int cost, int count)
+{
+    int i = 0, index;
+
+    // Find the index of the node in the graph
+    for (i = 0; i < count; i++)
+    {
+        if (p[i].nodeid == nid1)
+        {
+            int c = p[i].adjcount;
+            p[i].adjs[c] = nid2;
+            p[i].costs[c] = cost;
+            p[i].adjcount = c + 1;
+            break;
+        }
+    }
+}
+
+// Function to check if a node is already present in the list
+int added(int *list, int lcount, int nid)
+{
+    int i = 0;
+    for (i = 0; i < lcount; i++)
+    {
+        if (list[i] == nid)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Recursive function to find and print paths in the graph
+void findpath(struct Node *p, int count, int start, int end, int *list, int *clist, int lcount)
+{
+    int index = 0, i = 0;
+
+    // Check if the list contains the end node
+    if (list[lcount - 1] == end)
+    {
+        int tcost = 0;
+        printf("\nPath:");
+        for (i = 0; i < lcount; i++)
+        {
+            printf(" %d ", list[i]);
+            tcost += clist[i];
+        }
+        printf(" Cost = %d", tcost);
+        return;
+    }
+
+    // Find the index of the starting node in the graph
+    for (i = 0; i < count; i++)
+    {
+        if (p[i].nodeid == start)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    // Explore adjacent nodes
+    for (i = 0; i < p[index].adjcount; i++)
+    {
+        int a = added(list, lcount, p[index].adjs[i]);
+        if (a == 0)
+        {
+            // Add adjacent node to the list and continue exploration
+            list[lcount] = p[index].adjs[i];
+            clist[lcount] = p[index].costs[i];
+            lcount++;
+
+            findpath(p, count, p[index].adjs[i], end, list, clist, lcount);
+
+            // Backtrack to explore other paths
+            lcount--;
+        }
+    }
+}
+
+int main()
+{
+    struct Node nodes[50];  // Array to store graph nodes
+    int nodecount = 0;      // Counter for the number of nodes
+    int n1 = 0, n2 = 0, c = 0;
+
+    // Input nodes and edges with costs until user enters -9
+    while (1)
+    {
+        printf("Enter node1, node2, cost (-9 to exit): ");
+        scanf("%d %d %d", &n1, &n2, &c);
+        if (n1 == -9 || n2 == -9 || c == -9)
+        {
+            break;
+        }
+        nodecount = addNode(&nodes[0], n1, nodecount);
+        nodecount = addNode(&nodes[0], n2, nodecount);
+
+        addAdjacent(&nodes[0], n1, n2, c, nodecount);
+        addAdjacent(&nodes[0], n2, n1, c, nodecount);
+    }
+
+    int start, end;
+    printf("Enter start and end nodes: ");
+    scanf("%d %d", &start, &end);
+
+    int list[50], clist[50], lcount = 0;
+    list[0] = start;
+    clist[0] = 0;
+    lcount = 1;
+
+    // Find and print paths from start to end
+    findpath(nodes, nodecount, start, end, list, clist, lcount);
+
+    return 0;
+}
